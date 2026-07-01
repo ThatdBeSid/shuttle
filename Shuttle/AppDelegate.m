@@ -558,7 +558,10 @@
     NSURL *url;
     if ( ![terminalWindow isEqualToString:@"virtual"] ) {
         passParameters = @[escapedObject, terminalTheme, terminalTitle];
-        url = [NSURL URLWithString:escapedObject];
+        NSURL *candidateURL = [NSURL URLWithString:escapedObject];
+        if (candidateURL && ([candidateURL.scheme isEqualToString:@"http"] || [candidateURL.scheme isEqualToString:@"https"])) {
+            url = candidateURL;
+        }
     }
     else {
         passParameters = @[escapedObject, terminalTitle];
@@ -700,7 +703,11 @@
             [containerEvent setParamDescriptor:arguments forKeyword:keyDirectObject];
         }
         //Execute the event
-        [appleScript executeAppleEvent:containerEvent error:nil];
+        NSDictionary *executionError = nil;
+        [appleScript executeAppleEvent:containerEvent error:&executionError];
+        if (executionError) {
+            NSLog(@"Shuttle AppleScript execution error for %@: %@", scriptPath, executionError);
+        }
     }
 }
 
